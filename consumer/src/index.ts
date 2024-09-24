@@ -1,10 +1,6 @@
 import path from "node:path";
 import dotenv from "dotenv";
-import {
-  SQSClient,
-  ReceiveMessageCommand,
-  DeleteMessageCommand,
-} from "@aws-sdk/client-sqs";
+import { SQSClient, ReceiveMessageCommand, DeleteMessageCommand } from "@aws-sdk/client-sqs";
 import type { S3Event } from "aws-lambda";
 import { ECSClient, RunTaskCommand } from "@aws-sdk/client-ecs";
 
@@ -22,35 +18,23 @@ const {
   SECURITY_GROUP,
 } = process.env;
 
-const ACCEPTABLE_FORMATS = [
-  ".MP4", // Recommended format
-  ".MOV", // Commonly used
-  ".AVI", // Widely used
-  ".WMV", // Windows format
-  ".FLV", // Flash videos
-  ".WEBM", // Web use
-];
+const ACCEPTABLE_FORMATS = [".MP4", ".MOV", ".AVI", ".WMV", ".FLV", ".WEBM"];
 
-const createSQSClient = () =>
-  new SQSClient({
-    region: AWS_DEFAULT_REGION,
-    credentials: {
-      accessKeyId: AWS_ACCESS_KEY_ID!,
-      secretAccessKey: AWS_SECRET_ACCESS_KEY!,
-    },
-  });
+const sqsClient = new SQSClient({
+  region: AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: AWS_ACCESS_KEY_ID!,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY!,
+  },
+});
 
-const createECSClient = () =>
-  new ECSClient({
-    region: AWS_DEFAULT_REGION,
-    credentials: {
-      accessKeyId: AWS_ACCESS_KEY_ID!,
-      secretAccessKey: AWS_SECRET_ACCESS_KEY!,
-    },
-  });
-
-const sqsClient = createSQSClient();
-const ecsClient = createECSClient();
+const ecsClient = new ECSClient({
+  region: AWS_DEFAULT_REGION,
+  credentials: {
+    accessKeyId: AWS_ACCESS_KEY_ID!,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY!,
+  },
+});
 
 async function deleteMessageFromQueue(receiptHandle: string) {
   const deleteMessageCommand = new DeleteMessageCommand({
@@ -83,11 +67,7 @@ async function processMessage(message: any) {
     return;
   }
 
-  if (
-    "Service" in event &&
-    "Event" in event &&
-    event.Event === "s3:TestEvent"
-  ) {
+  if ("Service" in event && "Event" in event && event.Event === "s3:TestEvent") {
     await deleteMessageFromQueue(ReceiptHandle!);
     return;
   }
@@ -111,17 +91,11 @@ async function processMessage(message: any) {
 
     const fileExtension = path.extname(key).toUpperCase();
     if (!ACCEPTABLE_FORMATS.includes(fileExtension)) {
-      console.error(
-        `Invalid video format: ${fileExtension}. Accepted formats are: ${ACCEPTABLE_FORMATS.join(
-          ", "
-        )}`
-      );
+      console.error(`Invalid video format: ${fileExtension}. Accepted formats are: ${ACCEPTABLE_FORMATS.join(", ")}`);
       continue;
     }
 
-    console.log(
-      `File ${key} in bucket ${bucket.name} is valid for processing.`
-    );
+    console.log(`File ${key} in bucket ${bucket.name} is valid for processing.`);
 
     const runTaskCommand = new RunTaskCommand({
       taskDefinition: TASK_DEFINITION_ARN,

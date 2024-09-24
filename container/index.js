@@ -2,20 +2,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const ffmpeg = require("fluent-ffmpeg");
 const fsPromises = require("node:fs/promises");
-const {
-  S3Client,
-  GetObjectCommand,
-  PutObjectCommand,
-} = require("@aws-sdk/client-s3");
+const { S3Client, GetObjectCommand, PutObjectCommand } = require("@aws-sdk/client-s3");
 
-const {
-  KEY,
-  BUCKET,
-  PROD_BUCKET,
-  AWS_ACCESS_KEY_ID,
-  AWS_DEFAULT_REGION,
-  AWS_SECRET_ACCESS_KEY,
-} = process.env;
+const { KEY, BUCKET, PROD_BUCKET, AWS_ACCESS_KEY_ID, AWS_DEFAULT_REGION, AWS_SECRET_ACCESS_KEY } = process.env;
 
 const RESOLUTIONS = [
   { name: "144p", width: 256, height: 144, bitrate: "100k" },
@@ -59,7 +48,6 @@ async function uploadToS3(filePath, key) {
   }
 }
 
-// Get video duration and resolution
 async function getVideoMetadata(filePath) {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
@@ -74,38 +62,27 @@ async function getVideoMetadata(filePath) {
   });
 }
 
-// Upload HLS files
 async function uploadHLSFiles(outputDir, resolution) {
   try {
     const formattedKey = getFormattedKey(KEY);
     const files = await fsPromises.readdir(outputDir);
     const hlsFiles = files.filter(
-      (file) =>
-        file.startsWith(resolution.name) &&
-        (file.endsWith(".m3u8") || file.endsWith(".ts"))
+      (file) => file.startsWith(resolution.name) && (file.endsWith(".m3u8") || file.endsWith(".ts"))
     );
 
     const uploadPromises = hlsFiles.map((file) =>
-      uploadToS3(
-        path.join(outputDir, file),
-        `hls/${formattedKey}/${resolution.name}/${file}`
-      )
+      uploadToS3(path.join(outputDir, file), `hls/${formattedKey}/${resolution.name}/${file}`)
     );
 
     await Promise.all(uploadPromises);
   } catch (error) {
-    console.error(
-      `Error uploading HLS files for resolution ${resolution.name}:`,
-      error
-    );
+    console.error(`Error uploading HLS files for resolution ${resolution.name}:`, error);
     throw error;
   }
 }
 
 function getValidResolutions(width, height) {
-  return RESOLUTIONS.filter(
-    (resolution) => resolution.width <= width && resolution.height <= height
-  );
+  return RESOLUTIONS.filter((resolution) => resolution.width <= width && resolution.height <= height);
 }
 
 async function main() {
@@ -125,9 +102,7 @@ async function main() {
 
     const originalVideoPath = path.resolve(originalFilePath);
 
-    const { duration, width, height } = await getVideoMetadata(
-      originalVideoPath
-    );
+    const { duration, width, height } = await getVideoMetadata(originalVideoPath);
     const validResolutions = getValidResolutions(width, height);
     const estimatedSegments = Math.ceil(duration / 10);
     const padding = estimatedSegments.toString().length;
@@ -159,27 +134,20 @@ async function main() {
             .on("end", async () => {
               try {
                 await uploadHLSFiles(outputDir, resolution);
-                console.log(
-                  `Successfully processed and uploaded for ${resolution.name}`
-                );
+                console.log(`Successfully processed and uploaded for ${resolution.name}`);
                 resolve();
               } catch (uploadError) {
                 reject(uploadError);
               }
             })
             .on("error", (transcodeError) => {
-              console.error(
-                `Transcoding error for ${resolution.name}:`,
-                transcodeError
-              );
+              console.error(`Transcoding error for ${resolution.name}:`, transcodeError);
               reject(transcodeError);
             })
             .run();
         });
       } catch (error) {
-        console.error(
-          `Error during transcoding/uploading for ${resolution.name}. Stopping.`
-        );
+        console.error(`Error during transcoding/uploading for ${resolution.name}. Stopping.`);
         process.exit(1);
       }
     }
@@ -201,7 +169,6 @@ async function main() {
     const masterPlaylistPath = path.join(outputDir, "master.m3u8");
     await fsPromises.writeFile(masterPlaylistPath, masterPlaylistContent);
 
-    // Upload master playlist
     await uploadToS3(masterPlaylistPath, `hls/${formattedKey}/master.m3u8`);
 
     console.log("HLS transcoding and upload complete for all resolutions.");

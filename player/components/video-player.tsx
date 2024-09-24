@@ -25,11 +25,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 
 interface Quality {
@@ -42,10 +38,7 @@ interface VideoPlayerProps {
   title?: string;
 }
 
-export default function VideoPlayer({
-  src,
-  title = "HLS Adaptive Bitrate Streaming Platform",
-}: VideoPlayerProps) {
+export default function VideoPlayer({ src, title = "HLS Adaptive Bitrate Streaming Platform" }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLDivElement>(null);
@@ -219,11 +212,7 @@ export default function VideoPlayer({
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setShowControls(false)}
     >
-      <video
-        ref={videoRef}
-        className="w-full h-full cursor-pointer"
-        onClick={togglePlay}
-      />
+      <video ref={videoRef} className="w-full h-full cursor-pointer" onClick={togglePlay} />
       {isBuffering && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
@@ -235,9 +224,7 @@ export default function VideoPlayer({
           showControls ? "opacity-100" : "opacity-0"
         )}
       >
-        <div className="absolute top-4 left-4 text-white font-semibold cursor-text">
-          {title}
-        </div>
+        <div className="absolute top-4 left-4 text-white font-semibold cursor-text">{title}</div>
         <div className="absolute bottom-0 left-0 right-0 p-2.5">
           <div
             ref={progressRef}
@@ -257,47 +244,19 @@ export default function VideoPlayer({
           </div>
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={togglePlay}
-                className="text-white"
-              >
-                {isPlaying ? (
-                  <Pause className="h-4 w-4" />
-                ) : (
-                  <Play className="h-4 w-4" />
-                )}
+              <Button variant="ghost" size="icon" onClick={togglePlay} className="text-white">
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={skipBackward}
-                className="text-white"
-              >
+              <Button variant="ghost" size="icon" onClick={skipBackward} className="text-white">
                 <SkipBack className="h-4 w-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={skipForward}
-                className="text-white"
-              >
+              <Button variant="ghost" size="icon" onClick={skipForward} className="text-white">
                 <SkipForward className="h-4 w-4" />
               </Button>
               <HoverCard openDelay={150}>
                 <HoverCardTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={toggleMute}
-                    className="text-white"
-                  >
-                    {isMuted ? (
-                      <VolumeX className="h-4 w-4" />
-                    ) : (
-                      <Volume2 className="h-4 w-4" />
-                    )}
+                  <Button variant="ghost" size="icon" onClick={toggleMute} className="text-white">
+                    {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                   </Button>
                 </HoverCardTrigger>
                 <HoverCardContent side="top" className="w-40 p-2">
@@ -325,35 +284,17 @@ export default function VideoPlayer({
                   <DropdownMenuLabel>Quality</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => changeQuality("auto")}>
-                    Auto{" "}
-                    {currentQuality === "auto" && (
-                      <Check className="ml-2 h-4 w-4" />
-                    )}
+                    Auto {currentQuality === "auto" && <Check className="ml-2 h-4 w-4" />}
                   </DropdownMenuItem>
                   {qualities.map((quality, index) => (
-                    <DropdownMenuItem
-                      key={index}
-                      onClick={() => changeQuality(index)}
-                    >
-                      {quality.height}p{" "}
-                      {currentQuality === index && (
-                        <Check className="ml-2 h-4 w-4" />
-                      )}
+                    <DropdownMenuItem key={index} onClick={() => changeQuality(index)}>
+                      {quality.height}p {currentQuality === index && <Check className="ml-2 h-4 w-4" />}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={toggleFullscreen}
-                className="text-white"
-              >
-                {isFullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
-                ) : (
-                  <Maximize2 className="h-4 w-4" />
-                )}
+              <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white">
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </Button>
             </div>
           </div>
